@@ -19,12 +19,13 @@ I used ChatGPT to help review the dataset and data-generation logic, reason abou
 
 ## Claude 
 
-I used Claude (Sonnet 5.5, via the Claude chat interface) as a development assistant for the following.
+I used Claude as a development assistant for the following.
 
 - **First synthetic-data generator.** Claude wrote an early `data.py` that generated labelled complaints from phrase banks, with CSV output, noise (typos, casing, agent prefixes, irrelevant detail), a validator for safety and gas wording, and a train/held-out split. It was later superseded by the scenario-based `data_diverse.py`, which I developed with the other tools above. The early version informed how I thought about rule coverage and held-out evaluation.
 - **Dataset design discussion.** Claude helped me decide which columns belong in the training file and which are evaluation-only bookkeeping, and why a scenario or group identifier is needed to avoid leakage.
 - **Frontend.** Claude drafted the single-page UI (`index.html`, with styling separated into `index.css`) and the FastAPI changes that serve it from the same process.
 - **Code review.** Claude reviewed `api.py`, `classifier1.py` and `rules1.py` against the brief and flagged risks. 
+
 
 ## GitHub Copilot
 
