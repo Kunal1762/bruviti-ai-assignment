@@ -623,6 +623,8 @@ def _cap(s):
 
 
 def _typo(word, rng):
+    if len(word) < 3:        # NEW: a repeated typo can shrink a word below 3 letters
+        return word
     op = rng.choice(("swap", "drop", "dup", "sub"))
     i = rng.randrange(1, len(word) - 1)
     if op == "swap":

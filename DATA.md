@@ -117,7 +117,5 @@ Counts per class and split:
    Macro-F1.
 2. **Final model:** fit on train+dev, then **scored once on `test`**. `test` is never used
    for tuning.
-3. **Reported:** Macro-F1 over the 12 labels, per-class precision/recall/F1, accuracy by
-   scenario `kind`, and mean confidence on correct vs wrong predictions (is confidence
-   informative?). Command: `python -m src.classifier`.
+3. **Reported:** Held-out Macro-F1 on test is 0.528 for a train-only model and 0.614 after adding the dev scenarios (about 25% more scenarios). The gain suggests the score is limited by scenario diversity, not by the classifier. These numbers come from synthetic data and are optimistic for the hidden set.
 4. **Offline unit tests** (`tests/`) check label validity,
