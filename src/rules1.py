@@ -47,6 +47,8 @@ FLAME_CTX = {"caught", "catch", "catching", "burst", "bursting", "shooting", "sh
 BURN = {"burn", "burns", "burning", "burnt", "burned", "scorch", "scorched", "scorching",
         "quemado", "quemada", "quemando", "brule", "brulee", "jalne", "jalta", "jalti",
         "jala", "jali", "verbrannt"}
+EXPLODE = {"explode","exploded","explodes","exploding","explosion","blast"}
+BURN_CTX = {"inside","board","pcb","motor","element","unit","machine","back","panel","wire","wiring","something"}
 MELT = {"melt", "melting", "melted", "melts"}
 PARTS = {"plastic", "rubber", "wire", "wiring", "wires", "cable", "cord", "insulation",
          "plug", "socket"}
@@ -71,12 +73,12 @@ SUPPLY_ALL = SUPPLY_STRONG | {"power", "mains", "supply", "electricity", "electr
                               "electric", "electrical", "earth", "gfi"}
 BREAKER_ULTRA = {"mcb", "mccb", "rccb", "elcb", "gfci", "rcd", "breaker", "breakers",
                  "fuse", "fuses"}
-BREAKER_VERBS = {"gir", "girta", "girgaya", "gira", "giri", "down", "popped", "pops",
+BREAKER_VERBS = { "down", "popped", "pops",
                  "jumps", "jumped", "drops", "dropped", "knocks", "knocked", "goes",
                  "went", "tripped", "trips", "trip", "blew", "blown"}
 # ----------------------------------------------------------- vocabulary (C2)
 GAS = {"gas", "gass", "gaas", "lpg", "cng", "propane", "butane", "gaz", "gasgeruch"}
-LEAK = {"leak", "leaks", "leaking", "leakage", "leaked", "fuga", "fuite", "escaping",
+LEAK = {"leak", "leaks", "leaking", "leakage", "leaked",  "escaping",
         "escape", "escapes"}
 LEAK_LINK = {"is", "was", "keeps", "has", "been", "kept"}
 
@@ -186,6 +188,10 @@ def _c1_evidence(toks):
     hits += [(i, "electric shock") for i in _pairs(toks, {"choc"}, {"electrique"}, 1)]
     hits += [(i, "blown fuse") for i in _pairs(toks, BLOW, SUPPLY_STRONG, 4)]
     hits += [(i, "tripped breaker") for i in _pairs(toks, BREAKER_ULTRA, BREAKER_VERBS, 3)]
+    
+    hits += [(i, "explosion") for i, t in enumerate(toks) if t in EXPLODE]
+    hits += [(i, "short circuit") for i in _pairs(toks, {"short","shorted"}, {"circuit","circuited"}, 1)]
+    hits += [(i, "burning inside") for i in _pairs(toks, BURN, BURN_CTX, 3)]
     return [(i, lab) for i, lab in hits if not _negated(toks, i)]
 
 
