@@ -15,8 +15,7 @@ The iteration was guided by evaluation results, not just the overall Macro-F1 sc
 
 ## ChatGPT
 
-I used ChatGPT to help review the dataset and data-generation logic, reason about split leakage and scenario coverage, identify gaps in hard-case evaluation, and plan improvements to the classifier and rule engine. It also helped clarify the repository documentation, including `DATA.md` and `NOTES.md`, and gave practical Git guidance for excluding `.venv/` and local data from version control.
-
+I used ChatGPT to help review the dataset and data-generation logic, reason about split leakage and scenario coverage, identify gaps in hard-case evaluation, and plan improvements to the classifier and rule engine. It also helped clarify the repository documentation, including `DATA.md` and `NOTES.md`, and gave practical Git guidance.
 
 ## Claude 
 
