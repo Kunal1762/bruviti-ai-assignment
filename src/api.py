@@ -15,6 +15,10 @@ from src.classifier1 import train_model
 from src.data_diverse import LABELS
 from src.rules1 import classify_ticket
 
+from pathlib import Path
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
 # ------------------------------------------------------------------ lifecycle
 _state: dict = {}
 
@@ -36,6 +40,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_STATIC = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=_STATIC), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def index():
+    """Single-page UI served by the same process."""
+    return FileResponse(_STATIC / "index.html")
 # ------------------------------------------------------------------ schema
 VALID_PRODUCTS = {
     "washing_machine", "refrigerator", "air_conditioner", "dishwasher",
@@ -77,7 +89,7 @@ class ClassifyResponse(BaseModel):
 @app.get("/health")
 def health():
     """Liveness check."""
-    return {"status": "ok", "model_loaded": "model" in _state}
+    return {"status": "ok"}
 
 
 @app.post("/classify", response_model=ClassifyResponse)

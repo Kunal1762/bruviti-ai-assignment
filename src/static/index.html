@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fault Classifier</title>
+<link rel="stylesheet" href="/static/index.css">
+</head>
+<body>
+<main>
+  <h1>Fault Classifier <span class="status"><span id="dot" class="dot"></span><span id="hs">checking…</span></span></h1>
+  <p class="sub">Enter one complaint and see the response from <code>POST /classify</code>.</p>
+
+  <form id="f" class="card" autocomplete="off">
+    <div class="row">
+      <div><label for="tid">ticket_id</label><input id="tid" required></div>
+      <div><label for="prod">product_category</label>
+        <select id="prod">
+          <option>washing_machine</option><option>refrigerator</option><option>dishwasher</option>
+          <option>oven_or_cooktop</option><option>air_conditioner</option><option>water_heater</option>
+          <option>microwave</option>
+        </select></div>
+      <div><label for="age">product_age_days <span class="opt">(optional)</span></label>
+        <input id="age" type="number" min="0" step="1" placeholder="unknown"></div>
+    </div>
+    <label for="txt">complaint_text</label>
+    <textarea id="txt" maxlength="2000" required placeholder="Describe the problem…"></textarea>
+    <div class="hint"><span>5 to 2000 characters</span><span id="cnt">0 / 2000</span></div>
+    <div class="chips" id="chips"></div>
+    <button class="go" id="go" type="submit">Classify</button>
+  </form>
+
+  <div id="out" class="card hidden"></div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const EXAMPLES = [
+  ["Drive fault (E21)", "washing_machine", "machine fills with water then just sits there, drum never turns, display shows E21", 410],
+  ["Burning smell (C1)", "oven_or_cooktop", "There was a burning smell and a spark from the back when I switched it on, it is off now", 95],
+  ["New + not level (C3)", "refrigerator", "delivered yesterday, the doors are not level and one does not close properly", 1],
+  ["Gas smell (C2)", "water_heater", "I can smell gas near the geyser and the water stays cold", 600],
+  ["Bare error code (C4)", "dishwasher", "display shows F47", 900],
+  ["Not a complaint (C6)", "microwave", "thank you for the quick repair, great service", ""],
+];
+const newId = () => "T-" + Math.floor(1000 + Math.random() * 9000);
+$("tid").value = newId();
+
+EXAMPLES.forEach(([label, prod, text, age]) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = label;
+  b.onclick = () => { $("prod").value = prod; $("txt").value = text; $("age").value = age; $("tid").value = newId(); count(); };
+  $("chips").appendChild(b);
+});
+
+function count() { $("cnt").textContent = $("txt").value.length + " / 2000"; }
+$("txt").addEventListener("input", count);
+
+async function health() {
+  try {
+    const r = await fetch("/health");
+    const up = r.ok;
+    $("dot").className = "dot " + (up ? "up" : "down");
+    $("hs").textContent = up ? "service ready" : "not ready";
+  } catch { $("dot").className = "dot down"; $("hs").textContent = "unreachable"; }
+}
+health(); setInterval(health, 10000);
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function render(res, ms) {
+  const out = $("out"); out.replaceChildren(); out.classList.remove("hidden");
+  const esc = res.escalate === true;
+  out.append(el("div", "banner " + (esc ? "esc" : "no"),
+    esc ? "ESCALATE: a person must see this ticket" : "No escalation required"));
+  out.append(el("p", "cat", res.fault_category));
+  out.append(el("div", "k", "Confidence"));
+  const pct = Math.round((res.confidence || 0) * 100);
+  const bar = el("div", "bar"); const fill = document.createElement("i"); fill.style.width = pct + "%";
+  bar.append(fill); out.append(bar);
+  out.append(el("div", "", (res.confidence ?? 0).toFixed(2) + (res.confidence < 0.3 ? "  (low)" : "")));
+  out.append(el("div", "k", "Reason"));
+  out.append(el("div", "", res.reason));
+  out.append(el("div", "k", "ticket_id / latency"));
+  out.append(el("div", "", res.ticket_id + "  ·  " + ms + " ms"));
+  const d = el("details");
+  d.append(el("summary", "", "Raw JSON"), el("pre", "", JSON.stringify(res, null, 2)));
+  out.append(d);
+}
+
+function showError(msg) {
+  const out = $("out"); out.replaceChildren(); out.classList.remove("hidden");
+  out.append(el("div", "err", msg));
+}
+
+$("f").addEventListener("submit", async e => {
+  e.preventDefault();
+  const text = $("txt").value;
+  if (text.trim().length < 5) return showError("complaint_text must be at least 5 characters.");
+  const ageRaw = $("age").value.trim();
+  const body = {
+    ticket_id: $("tid").value.trim(),
+    product_category: $("prod").value,
+    complaint_text: text,
+    product_age_days: ageRaw === "" ? null : parseInt(ageRaw, 10),
+  };
+  $("go").disabled = true; $("go").textContent = "Classifying…";
+  const t0 = performance.now();
+  try {
+    const r = await fetch("/classify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const d = data.detail;
+      showError("HTTP " + r.status + ": " + (typeof d === "string" ? d : JSON.stringify(d || data)));
+    } else render(data, Math.round(performance.now() - t0));
+  } catch (err) {
+    showError("Request failed: " + err.message);
+  } finally {
+    $("go").disabled = false; $("go").textContent = "Classify";
+  }
+});
+</script>
+</body>
+</html>
