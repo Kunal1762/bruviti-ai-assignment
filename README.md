@@ -99,3 +99,14 @@ python -m pytest -q
 ├── DATA.md              # Data sourcing, construction, and test design
 ├── NOTES.md             # Design decisions, trade-offs, and future work
 └── AI.md                # List of AI tools and their utility
+```
+
+## Screenshots
+
+### Complaint entry form
+
+![Classifier form before submission](screenshots/Screenshot%202026-10-13%20234906.png)
+
+### Classification result
+
+![Classifier result after submission](screenshots/Screenshot%202026-10-13%20235004.png)
